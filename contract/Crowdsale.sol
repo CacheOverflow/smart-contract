@@ -91,8 +91,8 @@ contract HolyCoin is StandardToken, SafeMath {
     address public holyBountyFundDeposit;
 
     bool public isFinalized;
-    uint256 public fundingStartBlock;
-    uint256 public fundingEndBlock;
+    uint256 public fundingStartUnixTimestamp;
+    uint256 public fundingEndUnixTimestamp;
     uint256 public constant foundersFund = 2400 * (10**3) * 10**decimals; // 2.4M HolyCoins
     uint256 public constant bountyFund = 600 * (10**3) * 10**decimals; // 0.6M HolyCoins
     uint256 public constant conversionRate = 900; // 900 HolyCoins = 1 ETH
@@ -112,15 +112,15 @@ contract HolyCoin is StandardToken, SafeMath {
         address _ethFundDeposit,
         address _holyFoundersFundDeposit,
         address _holyBountyFundDeposit,
-        uint256 _fundingStartBlock,
-        uint256 _fundingEndBlock)
+        uint256 _fundingStartUnixTimestamp,
+        uint256 _fundingEndUnixTimestamp)
     {
       isFinalized = false;
       ethFundDeposit = _ethFundDeposit;
       holyFoundersFundDeposit = _holyFoundersFundDeposit;
       holyBountyFundDeposit = _holyBountyFundDeposit;
-      fundingStartBlock = _fundingStartBlock;
-      fundingEndBlock = _fundingEndBlock;
+      fundingStartUnixTimestamp = _fundingStartUnixTimestamp;
+      fundingEndUnixTimestamp = _fundingEndUnixTimestamp;
       totalSupply = foundersFund + bountyFund;
       balances[holyFoundersFundDeposit] = foundersFund;
       balances[holyBountyFundDeposit] = bountyFund;
@@ -131,8 +131,8 @@ contract HolyCoin is StandardToken, SafeMath {
 
     function makeTokens() payable  {
       if (isFinalized) throw;
-      if (block.number < fundingStartBlock) throw;
-      if (block.number > fundingEndBlock) throw;
+      if (block.timestamp < fundingStartUnixTimestamp) throw;
+      if (block.timestamp > fundingEndUnixTimestamp) throw;
       if (msg.value < 100 finney || msg.value > 100 ether) throw; // 100 finney = 0.1 ether
 
       uint256 tokens = safeMult(msg.value, tokenRate());
@@ -154,7 +154,7 @@ contract HolyCoin is StandardToken, SafeMath {
       if (isFinalized) throw;
       if (msg.sender != ethFundDeposit) throw;
 
-      if(block.number <= fundingEndBlock && totalSupply != tokenCreationCap) throw;
+      if(block.timestamp <= fundingEndUnixTimestamp && totalSupply != tokenCreationCap) throw;
 
       isFinalized = true;
       if(!ethFundDeposit.send(this.balance)) throw;
